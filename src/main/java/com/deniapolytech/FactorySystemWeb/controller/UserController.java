@@ -1,10 +1,7 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
 import com.deniapolytech.FactorySystemWeb.config.JwtTokenProvider;
-import com.deniapolytech.FactorySystemWeb.dto.LoginRequest;
-import com.deniapolytech.FactorySystemWeb.dto.LoginResponse;
-import com.deniapolytech.FactorySystemWeb.dto.RegistrationRequest;
-import com.deniapolytech.FactorySystemWeb.dto.RegistrationResponse;
+import com.deniapolytech.FactorySystemWeb.dto.*;
 import com.deniapolytech.FactorySystemWeb.model.User;
 import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.UserService;
@@ -115,6 +112,67 @@ public class UserController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new LoginResponse(false, "Ошибка входа: " + e.getMessage()));
+        }
+    }
+
+    @PostMapping("/validate-token")
+    public ResponseEntity<TokenValidationResponse> validateToken(@RequestBody TokenValidationRequest request) {
+        if (request.getToken() == null || request.getToken().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new TokenValidationResponse(false, "Токен обязателен"));
+        }
+
+        try {
+            if (jwtTokenProvider.validateToken(request.getToken())) {
+                String username = jwtTokenProvider.getUsernameFromToken(request.getToken());
+                User user = userRepository.findByUsername(username);
+
+                if (user != null) {
+                    return ResponseEntity.ok()
+                            .body(new TokenValidationResponse(true, "Токен валиден", user.getUsername()));
+                } else {
+                    return ResponseEntity.badRequest()
+                            .body(new TokenValidationResponse(false, "Пользователь не найден"));
+                }
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(new TokenValidationResponse(false, "Невалидный токен"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new TokenValidationResponse(false, "Ошибка валидации токена: " + e.getMessage()));
+        }
+    }
+
+    // Новый эндпоинт для обновления токена (опционально)
+    @PostMapping("/refresh-token")
+    public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
+        if (request.getToken() == null || request.getToken().trim().isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(new RefreshTokenResponse(false, "Токен обязателен"));
+        }
+
+        try {
+            if (jwtTokenProvider.validateToken(request.getToken())) {
+                String username = jwtTokenProvider.getUsernameFromToken(request.getToken());
+                User user = userRepository.findByUsername(username);
+
+                if (user != null) {
+                    // Генерируем новый токен
+                    String newToken = jwtTokenProvider.generateToken(user.getUsername());
+                    return ResponseEntity.ok()
+                            .body(new RefreshTokenResponse(true, "Токен обновлен", newToken, user.getUsername()));
+                } else {
+                    return ResponseEntity.badRequest()
+                            .body(new RefreshTokenResponse(false, "Пользователь не найден"));
+                }
+            } else {
+                return ResponseEntity.badRequest()
+                        .body(new RefreshTokenResponse(false, "Невалидный токен"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new RefreshTokenResponse(false, "Ошибка обновления токена: " + e.getMessage()));
         }
     }
 }
