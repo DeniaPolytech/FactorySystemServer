@@ -1,4 +1,4 @@
-package com.deniapolytech.FactorySystemWeb.dto;
+package com.deniapolytech.FactorySystemWeb.dto.auth;
 
 
 public class RegistrationRequest {

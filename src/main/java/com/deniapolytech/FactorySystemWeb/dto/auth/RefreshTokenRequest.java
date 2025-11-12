@@ -1,11 +1,11 @@
-package com.deniapolytech.FactorySystemWeb.dto;
+package com.deniapolytech.FactorySystemWeb.dto.auth;
 
-public class TokenValidationRequest {
+public class RefreshTokenRequest {
     private String token;
 
-    public TokenValidationRequest() {}
+    public RefreshTokenRequest() {}
 
-    public TokenValidationRequest(String token) {
+    public RefreshTokenRequest(String token) {
         this.token = token;
     }
 

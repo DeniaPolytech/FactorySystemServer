@@ -1,7 +1,7 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
 import com.deniapolytech.FactorySystemWeb.config.JwtTokenProvider;
-import com.deniapolytech.FactorySystemWeb.dto.*;
+import com.deniapolytech.FactorySystemWeb.dto.auth.*;
 import com.deniapolytech.FactorySystemWeb.model.User;
 import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.UserService;
@@ -13,13 +13,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Контроллер для работы с пользователем:
+ * Регистрация, авторизация, проверка токена, обновление токена
+ */
 @RestController
 @RequestMapping("/server/users")
 public class UserController {
+
     private final UserService userService;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+
 
     @Autowired
     public UserController(UserService userService, UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
@@ -27,6 +33,7 @@ public class UserController {
         this.userRepository = userRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.jwtTokenProvider = jwtTokenProvider;
+
     }
 
     @PostMapping("/register")
@@ -144,7 +151,7 @@ public class UserController {
         }
     }
 
-    // Новый эндпоинт для обновления токена (опционально)
+
     @PostMapping("/refresh-token")
     public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
         if (request.getToken() == null || request.getToken().trim().isEmpty()) {
