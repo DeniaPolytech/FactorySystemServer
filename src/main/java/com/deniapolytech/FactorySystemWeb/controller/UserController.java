@@ -68,9 +68,12 @@ public class UserController {
 
         try {
             String hashedPassword = passwordEncoder.encode(request.getPassword());
-            User newUser = new User(request.getUsername(), request.getEmail(), hashedPassword);
+            //User newUser = new User(request.getUsername(), request.getEmail(), hashedPassword);
 
-            userRepository.save(newUser);
+            User newUser = userService.registerUser(request.getUsername(), request.getEmail(), hashedPassword);
+
+            //userRepository.save(newUser);
+
 
             // Генерируем токен после успешной регистрации
             String token = jwtTokenProvider.generateToken(newUser.getUsername());
