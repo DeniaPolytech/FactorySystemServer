@@ -1,6 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.service;
 
-import com.deniapolytech.FactorySystemWeb.model.User;
+import com.deniapolytech.FactorySystemWeb.model.entity.User;
 import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,7 @@ public class UserService {
         }
 
 
-        User user = new User(username, email, password_hash);
+        User user = new User(username, email, password_hash, "client");
 
         return userRepository.save(user);
     }

@@ -2,7 +2,7 @@ package com.deniapolytech.FactorySystemWeb.controller;
 
 import com.deniapolytech.FactorySystemWeb.config.JwtTokenProvider;
 import com.deniapolytech.FactorySystemWeb.dto.auth.*;
-import com.deniapolytech.FactorySystemWeb.model.User;
+import com.deniapolytech.FactorySystemWeb.model.entity.User;
 import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.repository;
 
-import com.deniapolytech.FactorySystemWeb.model.Contact;
-import com.deniapolytech.FactorySystemWeb.model.User;
+import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,10 +11,10 @@ import java.util.List;
 @Repository
 public interface ContactsRepository extends JpaRepository<Contact, Integer> {
 
-    @Query("SELECT c FROM Contact c WHERE c.firstUserId = :userId OR c.secondUserId = :userId")
+    @Query("SELECT c FROM Contact c WHERE c.firstUser.id = :userId OR c.secondUser.id = :userId")
     List<Contact> findAllContactsByUserId(@Param("userId") int userId);
 
-    default boolean existsContactBetweenUsers(int user1Id, int user2Id) {
+    default Boolean existsContactBetweenUsers(int user1Id, int user2Id) {
         return existsByFirstUserIdAndSecondUserId(user1Id, user2Id) ||
                 existsByFirstUserIdAndSecondUserId(user2Id, user1Id);
     }

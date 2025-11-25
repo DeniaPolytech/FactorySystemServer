@@ -4,7 +4,7 @@ import com.deniapolytech.FactorySystemWeb.dto.contacts.AllContactsRequest;
 import com.deniapolytech.FactorySystemWeb.dto.contacts.AllContactsResponse;
 import com.deniapolytech.FactorySystemWeb.dto.contacts.TwoContactsRequest;
 import com.deniapolytech.FactorySystemWeb.dto.contacts.TwoContactsResponse;
-import com.deniapolytech.FactorySystemWeb.model.Contact;
+import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
 import com.deniapolytech.FactorySystemWeb.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

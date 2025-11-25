@@ -1,6 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.service;
 
-import com.deniapolytech.FactorySystemWeb.model.Contact;
+import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
 import com.deniapolytech.FactorySystemWeb.repository.ContactsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

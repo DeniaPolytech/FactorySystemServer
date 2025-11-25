@@ -1,10 +1,8 @@
 package com.deniapolytech.FactorySystemWeb.repository;
 
-import com.deniapolytech.FactorySystemWeb.model.User;
+import com.deniapolytech.FactorySystemWeb.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Integer> {

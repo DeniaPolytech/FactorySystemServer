@@ -1,14 +1,16 @@
-package com.deniapolytech.FactorySystemWeb.model;
+package com.deniapolytech.FactorySystemWeb.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 
 @Entity
 @Data
 @Getter
+@Setter
 @NoArgsConstructor
 @Table(name = "users")
 public class User {
@@ -25,17 +27,15 @@ public class User {
     @Column(name = "password_hash", nullable = false, unique = true)
     private String passwordHash;
 
-    public User(String username, String email, String passwordHash) {
+    @Column(name = "role", nullable = false, unique = false)
+    private String role;
+
+    public User(String username, String email, String passwordHash, String role) {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.role = role;
     }
 
-    public String getPasswordHash() {
-        return this.passwordHash;
-    }
 
-    public String getUsername(){
-        return this.username;
-    }
 }

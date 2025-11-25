@@ -1,6 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.dto.contacts;
 
-import com.deniapolytech.FactorySystemWeb.model.Contact;
+import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
