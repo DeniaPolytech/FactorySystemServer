@@ -5,6 +5,7 @@ import com.deniapolytech.FactorySystemWeb.dto.contacts.AllContactsResponse;
 import com.deniapolytech.FactorySystemWeb.dto.contacts.TwoContactsRequest;
 import com.deniapolytech.FactorySystemWeb.dto.contacts.TwoContactsResponse;
 import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
+import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,18 +20,21 @@ import java.util.List;
 @RequestMapping("server/contacts")
 public class ContactsController {
     private final ContactService contactService;
+    private final UserRepository userRepository;
 
     @Autowired
-    ContactsController(ContactService contactService){
+    ContactsController(ContactService contactService, UserRepository userRepository){
         this.contactService = contactService;
+        this.userRepository = userRepository;
     }
+
 
     @PostMapping("/by-user")
     public ResponseEntity<AllContactsResponse> getContactsByUserId(
             @RequestBody AllContactsRequest request
             ){
         try {
-            List<Contact> contacts = contactService.getAllContactsById(request.getUserId());
+            List<Contact> contacts = contactService.getAllContactsById(userRepository.findByUsername(request.getUserName()).getId());
             if (contacts.isEmpty()) {
                 return ResponseEntity.ok(new AllContactsResponse(true, "Контакты пользователя не найдены", contacts));
             }

@@ -6,6 +6,6 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AllContactsRequest {
-    private int userId;
+    private String userName;
 
 }
