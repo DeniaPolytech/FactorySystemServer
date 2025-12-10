@@ -7,5 +7,4 @@ import lombok.*;
 @NoArgsConstructor
 public class AllContactsRequest {
     private String userName;
-
 }

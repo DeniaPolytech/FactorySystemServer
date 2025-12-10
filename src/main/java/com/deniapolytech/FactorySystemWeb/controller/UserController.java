@@ -2,23 +2,30 @@ package com.deniapolytech.FactorySystemWeb.controller;
 
 import com.deniapolytech.FactorySystemWeb.config.JwtTokenProvider;
 import com.deniapolytech.FactorySystemWeb.dto.auth.*;
+import com.deniapolytech.FactorySystemWeb.dto.users.AllUsersRequest;
+import com.deniapolytech.FactorySystemWeb.dto.users.AllUsersResponse;
+import com.deniapolytech.FactorySystemWeb.dto.users.IdByUsernameRequest;
+import com.deniapolytech.FactorySystemWeb.dto.users.IdByUsernameResponse;
 import com.deniapolytech.FactorySystemWeb.model.entity.User;
 import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.UserService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * Контроллер для работы с пользователем:
  * Регистрация, авторизация, проверка токена, обновление токена
  */
 @RestController
-@RequestMapping("/server/users")
+@RequestMapping("client/server/users")
+@Tag(name = "Пользователи", description = "Операции с пользователями")
 public class UserController {
 
     private final UserService userService;
@@ -36,8 +43,41 @@ public class UserController {
 
     }
 
+    @GetMapping
+    @Operation(summary = "Получить всех пользователей")
+    public ResponseEntity<AllUsersResponse> getAllUsers() {
+        try {
+            List<User> data = userRepository.findAll();
+            return ResponseEntity.ok()
+                    .body(new AllUsersResponse(true, "Информация о всех пользователях", data));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new AllUsersResponse(false, "Ошибка получения информации " + e.getMessage()));
+        }
+    }
+
+    // RESTful endpoint для получения ID пользователя по имени
+    @GetMapping("/username/{username}/id")
+    @Operation(summary = "Получить ID пользователя по имени пользователя")
+    public ResponseEntity<IdByUsernameResponse> getIdByUsername(
+            @PathVariable String username) {
+        try {
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            }
+            int id = user.getId();
+            return ResponseEntity.ok()
+                    .body(new IdByUsernameResponse(true, "Id пользователя получен", id));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(new IdByUsernameResponse(false, "Ошибка получения информации " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<RegistrationResponse> register(@RequestBody RegistrationRequest request) {
+    @Operation(summary = "Зарегистрировать пользователя")
+    public ResponseEntity<RegistrationResponse> register(@Valid @RequestBody RegistrationRequest request) {
 
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             return ResponseEntity.badRequest()
@@ -88,7 +128,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
 
         if (request.getUsername() == null || request.getUsername().trim().isEmpty()) {
             return ResponseEntity.badRequest()
@@ -125,6 +165,7 @@ public class UserController {
         }
     }
 
+
     @PostMapping("/validate-token")
     public ResponseEntity<TokenValidationResponse> validateToken(@RequestBody TokenValidationRequest request) {
         if (request.getToken() == null || request.getToken().trim().isEmpty()) {
@@ -153,6 +194,7 @@ public class UserController {
                     .body(new TokenValidationResponse(false, "Ошибка валидации токена: " + e.getMessage()));
         }
     }
+
 
 
     @PostMapping("/refresh-token")

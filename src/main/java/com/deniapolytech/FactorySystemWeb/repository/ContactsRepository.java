@@ -2,9 +2,11 @@ package com.deniapolytech.FactorySystemWeb.repository;
 
 import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -21,4 +23,8 @@ public interface ContactsRepository extends JpaRepository<Contact, Integer> {
 
     boolean existsByFirstUserIdAndSecondUserId(int firstUserId, int secondUserId);
 
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM Contact c WHERE (c.firstUser.id = :userId1 AND c.secondUser.id = :userId2) OR (c.firstUser.id = :userId2 AND c.secondUser.id = :userId1)")
+    void deleteContactBetweenUsers(@Param("userId1") int userId1, @Param("userId2") int userId2);
 }

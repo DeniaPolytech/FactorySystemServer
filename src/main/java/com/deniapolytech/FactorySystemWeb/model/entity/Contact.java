@@ -23,4 +23,9 @@ public class Contact {
     @JoinColumn(name = "second_user_id", referencedColumnName = "id", nullable = false, unique = false)
     private User secondUser;
 
+    public Contact(User firstUser, User secondUser){
+        this.firstUser = firstUser;
+        this.secondUser = secondUser;
+    }
+
 }

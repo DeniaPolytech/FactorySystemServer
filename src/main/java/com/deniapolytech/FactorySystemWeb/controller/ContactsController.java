@@ -1,23 +1,20 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
-import com.deniapolytech.FactorySystemWeb.dto.contacts.AllContactsRequest;
-import com.deniapolytech.FactorySystemWeb.dto.contacts.AllContactsResponse;
-import com.deniapolytech.FactorySystemWeb.dto.contacts.TwoContactsRequest;
-import com.deniapolytech.FactorySystemWeb.dto.contacts.TwoContactsResponse;
+import com.deniapolytech.FactorySystemWeb.dto.auth.RegistrationResponse;
+import com.deniapolytech.FactorySystemWeb.dto.contacts.*;
 import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
+import com.deniapolytech.FactorySystemWeb.model.entity.User;
 import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.ContactService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("server/contacts")
+@RequestMapping("client/server/contacts")
 public class ContactsController {
     private final ContactService contactService;
     private final UserRepository userRepository;
@@ -29,15 +26,16 @@ public class ContactsController {
     }
 
 
-    @PostMapping("/by-user")
-    public ResponseEntity<AllContactsResponse> getContactsByUserId(
-            @RequestBody AllContactsRequest request
-            ){
+    @GetMapping("/users/{username}")
+    public ResponseEntity<AllContactsResponse> getContactsByUsername(
+            @PathVariable String username) {
         try {
-            List<Contact> contacts = contactService.getAllContactsById(userRepository.findByUsername(request.getUserName()).getId());
-            if (contacts.isEmpty()) {
-                return ResponseEntity.ok(new AllContactsResponse(true, "Контакты пользователя не найдены", contacts));
+            User user = userRepository.findByUsername(username);
+            if (user == null) {
+                return ResponseEntity.ok(new AllContactsResponse(true, "Пользователь не найден", null));
             }
+
+            List<Contact> contacts = contactService.getAllContactsById(user.getId());
             return ResponseEntity.ok(new AllContactsResponse(true, "Контакты получены", contacts));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -45,18 +43,46 @@ public class ContactsController {
         }
     }
 
-    @PostMapping("/isContact")
-    public ResponseEntity<TwoContactsResponse> isContact(
-            @RequestBody TwoContactsRequest request
-            ){
-        try{
-            boolean isContact = contactService.checkContacts(request.getFirstUserId(), request.getSecondUserId());
+
+    @GetMapping("/users/{firstUserId}/contacts/{secondUserId}")
+    public ResponseEntity<TwoContactsResponse> checkContact(
+            @PathVariable int firstUserId,
+            @PathVariable int secondUserId) {
+        try {
+            boolean isContact = contactService.checkContacts(firstUserId, secondUserId);
             return ResponseEntity.ok(new TwoContactsResponse(true, "Проверка успешно выполнена", isContact));
-        }catch (Exception e){
+        } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new TwoContactsResponse(false, "Ошибка проверки: " + e.getMessage()));
         }
     }
 
+    @PostMapping("/makeContact")
+    public ResponseEntity<MakeContactsResponse> makeContact(
+            @RequestBody MakeContactsRequest request
+    ){
+        try{
+            contactService.makeContact(request.getFirstUserId(), request.getSecondUserId());
+            return ResponseEntity.ok()
+                    .body(new MakeContactsResponse(true, "Контакт успешно создан"));
+        }catch(Exception e){
+            return ResponseEntity.internalServerError()
+                    .body(new MakeContactsResponse(false, "Ошибка при регистрации: " + e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/users/{firstUserId}/contacts/{secondUserId}")
+    public ResponseEntity<DeleteContactResponse> deleteContact(
+            @PathVariable int firstUserId,
+            @PathVariable int secondUserId) {
+        try {
+            contactService.deleteContactBetweenUsers(firstUserId, secondUserId);
+            return ResponseEntity.ok()
+                    .body(new DeleteContactResponse(true, "Контакт успешно удален"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(new DeleteContactResponse(false, "Ошибка удаления: " + e.getMessage()));
+        }
+    }
 
 }
