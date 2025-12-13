@@ -1,5 +1,7 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
+import com.deniapolytech.FactorySystemWeb.dto.ClientDTO;
+import com.deniapolytech.FactorySystemWeb.dto.UserDTO;
 import com.deniapolytech.FactorySystemWeb.dto.tasks.UserClientsResponse;
 import com.deniapolytech.FactorySystemWeb.model.entity.Client;
 import com.deniapolytech.FactorySystemWeb.model.entity.User;
@@ -41,7 +43,10 @@ public class TasksController {
         }
 
         List<Client> clients = taskService.getUsersClients(user);
+        List<ClientDTO> clientDTOs = clients.stream()
+                .map(ClientDTO::fromEntity)
+                .toList();
         return ResponseEntity.ok()
-                .body(new UserClientsResponse(true, "Контакты получены", clients));
+                .body(new UserClientsResponse(true, "Контакты получены", clientDTOs));
     }
 }

@@ -25,4 +25,9 @@ public class Task {
     @ManyToOne
     @JoinColumn(name = "id_worker", referencedColumnName = "id", nullable = false, unique = false)
     private User user;
+
+    public Task(Client client, User user){
+        this.client = client;
+        this.user = user;
+    }
 }

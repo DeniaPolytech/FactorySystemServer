@@ -13,7 +13,8 @@ import lombok.*;
 public class Client {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id_client;
+    @Column(name = "id_client")
+    private int idClient;
 
     @ManyToOne
     @JoinColumn(name = "id_surname", referencedColumnName = "id_surname", nullable = false, unique = false)

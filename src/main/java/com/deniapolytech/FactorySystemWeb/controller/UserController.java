@@ -1,6 +1,7 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
 import com.deniapolytech.FactorySystemWeb.config.JwtTokenProvider;
+import com.deniapolytech.FactorySystemWeb.dto.UserDTO;
 import com.deniapolytech.FactorySystemWeb.dto.auth.*;
 import com.deniapolytech.FactorySystemWeb.dto.users.AllUsersRequest;
 import com.deniapolytech.FactorySystemWeb.dto.users.AllUsersResponse;
@@ -18,6 +19,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Контроллер для работы с пользователем:
@@ -47,9 +49,13 @@ public class UserController {
     @Operation(summary = "Получить всех пользователей")
     public ResponseEntity<AllUsersResponse> getAllUsers() {
         try {
-            List<User> data = userRepository.findAll();
+            List<User> users = userRepository.findAll();
+
+            List<UserDTO> userDTOs = users.stream()
+                    .map(UserDTO::fromEntity)
+                    .toList();
             return ResponseEntity.ok()
-                    .body(new AllUsersResponse(true, "Информация о всех пользователях", data));
+                    .body(new AllUsersResponse(true, "Информация о всех пользователях", userDTOs));
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new AllUsersResponse(false, "Ошибка получения информации " + e.getMessage()));

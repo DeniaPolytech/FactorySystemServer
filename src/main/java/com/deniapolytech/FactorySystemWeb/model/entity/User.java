@@ -1,10 +1,7 @@
 package com.deniapolytech.FactorySystemWeb.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 
 @Entity
@@ -12,6 +9,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users")
 public class User {
     @Id
@@ -37,5 +35,21 @@ public class User {
         this.role = role;
     }
 
+    public boolean isAdmin() {
+        return "admin".equalsIgnoreCase(this.role) ||
+                "ADMIN".equalsIgnoreCase(this.role);
+    }
 
+    public boolean isClient() {
+        return "client".equalsIgnoreCase(this.role) ||
+                "CLIENT".equalsIgnoreCase(this.role);
+    }
+
+    public String getRoleWithPrefix() {
+        return "ROLE_" + this.role.toUpperCase();
+    }
+
+    public String getRoleUpperCase() {
+        return this.role.toUpperCase();
+    }
 }

@@ -1,5 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
+import com.deniapolytech.FactorySystemWeb.dto.ContactDTO;
 import com.deniapolytech.FactorySystemWeb.dto.auth.RegistrationResponse;
 import com.deniapolytech.FactorySystemWeb.dto.contacts.*;
 import com.deniapolytech.FactorySystemWeb.model.entity.Contact;
@@ -31,12 +32,16 @@ public class ContactsController {
             @PathVariable String username) {
         try {
             User user = userRepository.findByUsername(username);
+
             if (user == null) {
                 return ResponseEntity.ok(new AllContactsResponse(true, "Пользователь не найден", null));
             }
 
             List<Contact> contacts = contactService.getAllContactsById(user.getId());
-            return ResponseEntity.ok(new AllContactsResponse(true, "Контакты получены", contacts));
+            List<ContactDTO> contactDTOs = contacts.stream()
+                    .map(ContactDTO::fromEntity)
+                    .toList();
+            return ResponseEntity.ok(new AllContactsResponse(true, "Контакты получены", contactDTOs));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                     .body(new AllContactsResponse(false, "Ошибка получения контактов: " + e.getMessage()));
