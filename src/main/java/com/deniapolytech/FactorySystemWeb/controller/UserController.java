@@ -21,10 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Контроллер для работы с пользователем:
- * Регистрация, авторизация, проверка токена, обновление токена
- */
 @RestController
 @RequestMapping("client/server/users")
 @Tag(name = "Пользователи", description = "Операции с пользователями")
@@ -35,14 +31,15 @@ public class UserController {
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
 
-
     @Autowired
-    public UserController(UserService userService, UserRepository userRepository, JwtTokenProvider jwtTokenProvider) {
+    public UserController(UserService userService,
+                          UserRepository userRepository,
+                          JwtTokenProvider jwtTokenProvider,
+                          BCryptPasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.userRepository = userRepository;
-        this.passwordEncoder = new BCryptPasswordEncoder();
         this.jwtTokenProvider = jwtTokenProvider;
-
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping
@@ -114,18 +111,19 @@ public class UserController {
 
         try {
             String hashedPassword = passwordEncoder.encode(request.getPassword());
-            //User newUser = new User(request.getUsername(), request.getEmail(), hashedPassword);
-
             User newUser = userService.registerUser(request.getUsername(), request.getEmail(), hashedPassword);
 
-            //userRepository.save(newUser);
 
-
-            // Генерируем токен после успешной регистрации
-            String token = jwtTokenProvider.generateToken(newUser.getUsername());
+            String token = jwtTokenProvider.generateToken(newUser.getUsername(), newUser.getRole());
 
             return ResponseEntity.ok()
-                    .body(new RegistrationResponse(true, "Пользователь успешно зарегистрирован", token, newUser.getUsername()));
+                    .body(new RegistrationResponse(
+                            true,
+                            "Пользователь успешно зарегистрирован",
+                            token,
+                            newUser.getUsername(),
+                            newUser.getRole()
+                    ));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
@@ -159,18 +157,23 @@ public class UserController {
         }
 
         try {
-            // Генерируем токен после успешного входа
-            String token = jwtTokenProvider.generateToken(existingUser.getUsername());
+            // Генерируем токен с ролью после успешного входа
+            String token = jwtTokenProvider.generateToken(existingUser.getUsername(), existingUser.getRole());
 
             return ResponseEntity.ok()
-                    .body(new LoginResponse(true, "Вход успешно выполнен", token, existingUser.getUsername()));
+                    .body(new LoginResponse(
+                            true,
+                            "Вход успешно выполнен",
+                            token,
+                            existingUser.getUsername(),
+                            existingUser.getRole()
+                    ));
 
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(new LoginResponse(false, "Ошибка входа: " + e.getMessage()));
         }
     }
-
 
     @PostMapping("/validate-token")
     public ResponseEntity<TokenValidationResponse> validateToken(@RequestBody TokenValidationRequest request) {
@@ -185,8 +188,14 @@ public class UserController {
                 User user = userRepository.findByUsername(username);
 
                 if (user != null) {
+                    String roleFromToken = jwtTokenProvider.getRoleFromToken(request.getToken());
                     return ResponseEntity.ok()
-                            .body(new TokenValidationResponse(true, "Токен валиден", user.getUsername()));
+                            .body(new TokenValidationResponse(
+                                    true,
+                                    "Токен валиден",
+                                    user.getUsername(),
+                                    roleFromToken
+                            ));
                 } else {
                     return ResponseEntity.badRequest()
                             .body(new TokenValidationResponse(false, "Пользователь не найден"));
@@ -201,8 +210,6 @@ public class UserController {
         }
     }
 
-
-
     @PostMapping("/refresh-token")
     public ResponseEntity<RefreshTokenResponse> refreshToken(@RequestBody RefreshTokenRequest request) {
         if (request.getToken() == null || request.getToken().trim().isEmpty()) {
@@ -216,10 +223,16 @@ public class UserController {
                 User user = userRepository.findByUsername(username);
 
                 if (user != null) {
-                    // Генерируем новый токен
-                    String newToken = jwtTokenProvider.generateToken(user.getUsername());
+                    // Генерируем новый токен с той же ролью
+                    String newToken = jwtTokenProvider.generateToken(user.getUsername(), user.getRole());
                     return ResponseEntity.ok()
-                            .body(new RefreshTokenResponse(true, "Токен обновлен", newToken, user.getUsername()));
+                            .body(new RefreshTokenResponse(
+                                    true,
+                                    "Токен обновлен",
+                                    newToken,
+                                    user.getUsername(),
+                                    user.getRole()
+                            ));
                 } else {
                     return ResponseEntity.badRequest()
                             .body(new RefreshTokenResponse(false, "Пользователь не найден"));
@@ -233,4 +246,5 @@ public class UserController {
                     .body(new RefreshTokenResponse(false, "Ошибка обновления токена: " + e.getMessage()));
         }
     }
+
 }

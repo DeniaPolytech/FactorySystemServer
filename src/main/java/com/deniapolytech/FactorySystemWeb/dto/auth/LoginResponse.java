@@ -5,6 +5,7 @@ public class LoginResponse {
     private String message;
     private String token;
     private String username;
+    private String role;
 
     // Конструкторы
     public LoginResponse() {}
@@ -14,14 +15,14 @@ public class LoginResponse {
         this.message = message;
     }
 
-    public LoginResponse(boolean success, String message, String token, String username) {
+    public LoginResponse(boolean success, String message, String token, String username, String role) {
         this.success = success;
         this.message = message;
         this.token = token;
         this.username = username;
+        this.role = role;
     }
 
-    // Геттеры и сеттеры
     public boolean isSuccess() { return success; }
     public void setSuccess(boolean success) { this.success = success; }
 
@@ -33,4 +34,7 @@ public class LoginResponse {
 
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 }

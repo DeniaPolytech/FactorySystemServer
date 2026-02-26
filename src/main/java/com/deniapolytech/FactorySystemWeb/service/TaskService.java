@@ -1,5 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.service;
 
+import com.deniapolytech.FactorySystemWeb.dto.ClientTaskDTO;
 import com.deniapolytech.FactorySystemWeb.model.entity.Client;
 import com.deniapolytech.FactorySystemWeb.model.entity.Task;
 import com.deniapolytech.FactorySystemWeb.model.entity.User;
@@ -20,11 +21,10 @@ public class TaskService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<Client> getUsersClients(User user){
-        List<Client> clients = tasksRepository.findAllByUser(user)
+    public List<ClientTaskDTO> getUsersClients(User user){
+        return tasksRepository.findAllByUser(user)
                 .stream()
-                .map(Task::getClient)
+                .map(ClientTaskDTO::fromTask)
                 .collect(Collectors.toList());
-        return clients;
     }
 }

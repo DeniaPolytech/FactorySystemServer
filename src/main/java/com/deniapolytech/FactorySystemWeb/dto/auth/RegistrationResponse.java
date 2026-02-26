@@ -12,13 +12,15 @@ public class RegistrationResponse {
     private String message;
     private String token;
     private String username;
+    private String role;
 
-    // Конструкторы
-    public RegistrationResponse(boolean success, String message, String token, String username) {
+
+    public RegistrationResponse(boolean success, String message, String token, String username, String role) {
         this.success = success;
         this.message = "Пользователь успешно зарегистрирован";
         this.token = token;
         this.username = username;
+        this.role = role;
     }
 
     public RegistrationResponse(boolean success, String message) {

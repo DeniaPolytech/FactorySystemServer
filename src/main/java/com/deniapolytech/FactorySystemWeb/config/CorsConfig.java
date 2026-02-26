@@ -13,10 +13,19 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("http://127.0.0.1:5500", "http://localhost:8080")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE")
+                        .allowedOriginPatterns(
+                                "http://localhost:*",
+                                "http://127.0.0.1:*",
+                                "http://192.168.*:*", // Все порты для сети 192.168.x.x
+                                "http://10.*.*.*:*",  // Если используете сеть 10.x.x.x
+                                "http://172.16.*.*:*", // Если используете сеть 172.16.x.x
+                                "http://[::1]:*" // IPv6
+                        )
+                        .allowedMethods("*") // Разрешить все методы
                         .allowedHeaders("*")
-                        .allowCredentials(true);
+                        .exposedHeaders("Authorization") // Если нужно
+                        .allowCredentials(true)
+                        .maxAge(3600); // Кэшировать предварительные запросы на 1 час
             }
         };
     }

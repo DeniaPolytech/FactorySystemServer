@@ -39,11 +39,14 @@ class UserControllerTest {
     @Mock
     private JwtTokenProvider jwtTokenProvider;
 
+    @Mock
+    private BCryptPasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserController userController;
 
     private User testUser;
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final BCryptPasswordEncoder realPasswordEncoder = new BCryptPasswordEncoder();
 
     @BeforeEach
     void setUp() {
@@ -51,7 +54,8 @@ class UserControllerTest {
         testUser.setId(1);
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
-        testUser.setPasswordHash(passwordEncoder.encode("password123"));
+        testUser.setPasswordHash(realPasswordEncoder.encode("password123"));
+        testUser.setRole("client"); // Добавляем роль
     }
 
     @Test
@@ -84,8 +88,6 @@ class UserControllerTest {
         assertTrue(response.getBody().getMessage().contains("Ошибка получения информации"));
     }
 
-
-
     @Test
     void getIdByUsername_UserNotFound() {
         // Arrange
@@ -109,7 +111,8 @@ class UserControllerTest {
         when(userRepository.findByUsername("newuser")).thenReturn(null);
         when(userRepository.findByEmail("new@example.com")).thenReturn(null);
         when(userService.registerUser(anyString(), anyString(), anyString())).thenReturn(testUser);
-        when(jwtTokenProvider.generateToken(anyString())).thenReturn("test-token");
+        when(passwordEncoder.encode(anyString())).thenReturn("hashedPassword");
+        when(jwtTokenProvider.generateToken(anyString(), anyString())).thenReturn("test-token");
 
         // Act
         ResponseEntity<RegistrationResponse> response = userController.register(request);
@@ -119,6 +122,7 @@ class UserControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals("Пользователь успешно зарегистрирован", response.getBody().getMessage());
         assertEquals("test-token", response.getBody().getToken());
+        assertEquals("client", response.getBody().getRole()); // Проверяем роль
     }
 
     @Test
@@ -165,7 +169,8 @@ class UserControllerTest {
         request.setPassword("password123");
 
         when(userRepository.findByUsername("testuser")).thenReturn(testUser);
-        when(jwtTokenProvider.generateToken(anyString())).thenReturn("test-token");
+        when(passwordEncoder.matches(anyString(), anyString())).thenReturn(true);
+        when(jwtTokenProvider.generateToken(anyString(), anyString())).thenReturn("test-token");
 
         // Act
         ResponseEntity<LoginResponse> response = userController.login(request);
@@ -175,6 +180,7 @@ class UserControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals("Вход успешно выполнен", response.getBody().getMessage());
         assertEquals("test-token", response.getBody().getToken());
+
     }
 
     @Test
@@ -185,6 +191,7 @@ class UserControllerTest {
         request.setPassword("wrongpassword");
 
         when(userRepository.findByUsername("testuser")).thenReturn(testUser);
+        when(passwordEncoder.matches("wrongpassword", testUser.getPasswordHash())).thenReturn(false);
 
         // Act
         ResponseEntity<LoginResponse> response = userController.login(request);
@@ -196,6 +203,24 @@ class UserControllerTest {
     }
 
     @Test
+    void login_UserNotFound() {
+        // Arrange
+        LoginRequest request = new LoginRequest();
+        request.setUsername("nonexistent");
+        request.setPassword("password123");
+
+        when(userRepository.findByUsername("nonexistent")).thenReturn(null);
+
+        // Act
+        ResponseEntity<LoginResponse> response = userController.login(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Пользователь не найден", response.getBody().getMessage());
+    }
+
+    @Test
     void validateToken_Success() {
         // Arrange
         TokenValidationRequest request = new TokenValidationRequest();
@@ -203,6 +228,7 @@ class UserControllerTest {
 
         when(jwtTokenProvider.validateToken("valid-token")).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken("valid-token")).thenReturn("testuser");
+        when(jwtTokenProvider.getRoleFromToken("valid-token")).thenReturn("client");
         when(userRepository.findByUsername("testuser")).thenReturn(testUser);
 
         // Act
@@ -213,6 +239,7 @@ class UserControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals("Токен валиден", response.getBody().getMessage());
         assertEquals("testuser", response.getBody().getUsername());
+        assertEquals("client", response.getBody().getRole()); // Проверяем роль
     }
 
     @Test
@@ -233,6 +260,40 @@ class UserControllerTest {
     }
 
     @Test
+    void validateToken_TokenEmpty() {
+        // Arrange
+        TokenValidationRequest request = new TokenValidationRequest();
+        request.setToken("");
+
+        // Act
+        ResponseEntity<TokenValidationResponse> response = userController.validateToken(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Токен обязателен", response.getBody().getMessage());
+    }
+
+    @Test
+    void validateToken_UserNotFound() {
+        // Arrange
+        TokenValidationRequest request = new TokenValidationRequest();
+        request.setToken("valid-token");
+
+        when(jwtTokenProvider.validateToken("valid-token")).thenReturn(true);
+        when(jwtTokenProvider.getUsernameFromToken("valid-token")).thenReturn("nonexistent");
+        when(userRepository.findByUsername("nonexistent")).thenReturn(null);
+
+        // Act
+        ResponseEntity<TokenValidationResponse> response = userController.validateToken(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Пользователь не найден", response.getBody().getMessage());
+    }
+
+    @Test
     void refreshToken_Success() {
         // Arrange
         RefreshTokenRequest request = new RefreshTokenRequest();
@@ -241,7 +302,7 @@ class UserControllerTest {
         when(jwtTokenProvider.validateToken("old-token")).thenReturn(true);
         when(jwtTokenProvider.getUsernameFromToken("old-token")).thenReturn("testuser");
         when(userRepository.findByUsername("testuser")).thenReturn(testUser);
-        when(jwtTokenProvider.generateToken("testuser")).thenReturn("new-token");
+        when(jwtTokenProvider.generateToken("testuser", "client")).thenReturn("new-token");
 
         // Act
         ResponseEntity<RefreshTokenResponse> response = userController.refreshToken(request);
@@ -251,6 +312,7 @@ class UserControllerTest {
         assertTrue(response.getBody().isSuccess());
         assertEquals("Токен обновлен", response.getBody().getMessage());
         assertEquals("new-token", response.getBody().getToken());
+        assertEquals("client", response.getBody().getRole()); // Проверяем роль
     }
 
     @Test
@@ -266,5 +328,56 @@ class UserControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isSuccess());
         assertEquals("Токен обязателен", response.getBody().getMessage());
+    }
+
+    @Test
+    void refreshToken_InvalidToken() {
+        // Arrange
+        RefreshTokenRequest request = new RefreshTokenRequest();
+        request.setToken("invalid-token");
+
+        when(jwtTokenProvider.validateToken("invalid-token")).thenReturn(false);
+
+        // Act
+        ResponseEntity<RefreshTokenResponse> response = userController.refreshToken(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Невалидный токен", response.getBody().getMessage());
+    }
+
+    @Test
+    void refreshToken_UserNotFound() {
+        // Arrange
+        RefreshTokenRequest request = new RefreshTokenRequest();
+        request.setToken("valid-token");
+
+        when(jwtTokenProvider.validateToken("valid-token")).thenReturn(true);
+        when(jwtTokenProvider.getUsernameFromToken("valid-token")).thenReturn("nonexistent");
+        when(userRepository.findByUsername("nonexistent")).thenReturn(null);
+
+        // Act
+        ResponseEntity<RefreshTokenResponse> response = userController.refreshToken(request);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isSuccess());
+        assertEquals("Пользователь не найден", response.getBody().getMessage());
+    }
+
+    @Test
+    void getIdByUsername_Success() {
+        // Arrange
+        when(userRepository.findByUsername("testuser")).thenReturn(testUser);
+
+        // Act
+        ResponseEntity<IdByUsernameResponse> response = userController.getIdByUsername("testuser");
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().isSuccess());
+        assertEquals("Id пользователя получен", response.getBody().getMessage());
+        assertEquals(1, response.getBody().getUserId());
     }
 }

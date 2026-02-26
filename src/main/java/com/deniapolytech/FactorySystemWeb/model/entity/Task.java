@@ -26,8 +26,12 @@ public class Task {
     @JoinColumn(name = "id_worker", referencedColumnName = "id", nullable = false, unique = false)
     private User user;
 
+    @Column(name = "id_status")
+    private int status;
+
     public Task(Client client, User user){
         this.client = client;
         this.user = user;
+        this.status = 0;
     }
 }

@@ -1,5 +1,6 @@
 package com.deniapolytech.FactorySystemWeb.controller;
 
+import com.deniapolytech.FactorySystemWeb.dto.ClientTaskDTO;
 import com.deniapolytech.FactorySystemWeb.dto.tasks.MakeTaskResponse;
 import com.deniapolytech.FactorySystemWeb.model.entity.Client;
 import com.deniapolytech.FactorySystemWeb.model.entity.Task;
@@ -10,6 +11,7 @@ import com.deniapolytech.FactorySystemWeb.repository.UserRepository;
 import com.deniapolytech.FactorySystemWeb.service.TaskService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,7 +34,9 @@ public class AdminTasksController {
         this.tasksRepository = tasksRepository;
     }
 
+
     @PostMapping("/clients/{id_client}/users/{username}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
     public ResponseEntity<MakeTaskResponse> makeTask(
             @PathVariable("id_client") int clientId,
             @PathVariable String username){
@@ -43,15 +47,25 @@ public class AdminTasksController {
         }
 
         Client client = clientRepository.findByIdClient(clientId);
+
         if (client == null) {
             return ResponseEntity.badRequest()
                     .body(new MakeTaskResponse(false, "Клиент не найден"));
         }
 
-        List<Client> userClients = taskService.getUsersClients(user);
-        if (userClients.contains(client)) {
+        // Получаем задачи пользователя
+        List<ClientTaskDTO> userTasks = taskService.getUsersClients(user);
+
+        // Проверяем, существует ли уже задача для этого клиента
+        boolean taskExists = userTasks.stream()
+                .anyMatch(clientTaskDTO -> {
+                    Client taskClient = clientTaskDTO.getClient();
+                    return taskClient != null && taskClient.getIdClient() == clientId;
+                });
+
+        if (taskExists) {
             return ResponseEntity.badRequest()
-                    .body(new MakeTaskResponse(false, "Задача уже существует"));
+                    .body(new MakeTaskResponse(false, "Задача уже существует для этого клиента"));
         }
 
         try {

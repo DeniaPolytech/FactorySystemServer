@@ -1,9 +1,15 @@
 package com.deniapolytech.FactorySystemWeb.dto.auth;
 
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
 public class TokenValidationResponse {
     private boolean success;
     private String message;
     private String username;
+    private String role;
 
     public TokenValidationResponse() {}
 
@@ -12,10 +18,11 @@ public class TokenValidationResponse {
         this.message = message;
     }
 
-    public TokenValidationResponse(boolean success, String message, String username) {
+    public TokenValidationResponse(boolean success, String message, String username, String role) {
         this.success = success;
         this.message = message;
         this.username = username;
+        this.role = role;
     }
 
     public boolean isSuccess() { return success; }
